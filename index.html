@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Analytics Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            z-index: 1000;
+        }
+
+        .platform-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .jurisdictions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .flag {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .flag:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .flag.uae { background: linear-gradient(to bottom, #00732f 33%, #ffffff 33%, #ffffff 66%, #000000 66%); position: relative; }
+        .flag.uae::after { content: ''; position: absolute; left: 0; top: 0; width: 12px; height: 100%; background: #ce1126; }
+
+        .flag.france { background: linear-gradient(to right, #002654 33%, #ffffff 33%, #ffffff 66%, #ce1126 66%); }
+
+        .flag.luxembourg { background: linear-gradient(to bottom, #ed2939 33%, #ffffff 33%, #ffffff 66%, #00a2e1 66%); }
+
+        .flag.mauritius { background: linear-gradient(to bottom, #ea4335 25%, #4285f4 25%, #4285f4 50%, #34a853 50%, #34a853 75%, #fbbc04 75%); }
+
+        .flag.indonesia { background: linear-gradient(to bottom, #ce1126 50%, #ffffff 50%); }
+
+        .flag.us {
+            background: linear-gradient(
+                to bottom,
+                #b22234 7.69%, #ffffff 7.69%, #ffffff 15.38%,
+                #b22234 15.38%, #b22234 23.08%, #ffffff 23.08%,
+                #ffffff 30.77%, #b22234 30.77%, #b22234 38.46%,
+                #ffffff 38.46%, #ffffff 46.15%, #b22234 46.15%,
+                #b22234 53.85%, #ffffff 53.85%, #ffffff 61.54%,
+                #b22234 61.54%, #b22234 69.23%, #ffffff 69.23%,
+                #ffffff 76.92%, #b22234 76.92%, #b22234 84.62%,
+                #ffffff 84.62%, #ffffff 92.31%, #b22234 92.31%
+            );
+            position: relative;
+        }
+
+        .flag.us::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40%;
+            height: 53.85%;
+            background: #3c3b6e;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: 100vh;
+            padding-top: 80px;
+        }
+
+        .sidebar {
+            background: rgba(15, 15, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px 30px;
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .question-list {
+            list-style: none;
+        }
+
+        .question-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .question-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .question-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .question-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            background: rgba(10, 10, 10, 0.5);
+        }
+
+        .chat-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 20px 25px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .message.user {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-left: auto;
+            color: #ffffff;
+        }
+
+        .message.assistant {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-right: auto;
+            color: #ffffff;
+        }
+
+        .input-container {
+            padding: 30px 40px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-wrapper {
+            position: relative;
+            max-width: 800px;
+        }
+
+        .question-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 18px 60px 18px 25px;
+            font-size: 1rem;
+            color: #ffffff;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .question-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+        }
+
+        .question-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .send-button {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: #ffffff;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        .welcome-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top: 2px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .header {
+                padding: 0 20px;
+            }
+            
+            .jurisdictions {
+                gap: 10px;
+            }
+            
+            .flag {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="platform-title">TAX ANALYTICS PLATFORM</div>
+        <div class="jurisdictions">
+            <div class="flag uae" title="UAE - United Arab Emirates"></div>
+            <div class="flag france" title="France"></div>
+            <div class="flag luxembourg" title="Luxembourg"></div>
+            <div class="flag mauritius" title="Mauritius"></div>
+            <div class="flag indonesia" title="Indonesia"></div>
+            <div class="flag us" title="United States"></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-title">Sample Queries</div>
+            <ul class="question-list">
+                <li class="question-item" onclick="selectQuestion(this)">
+                    <p class="question-text">Corporate Tax obligations for 5M AED revenue mainland entity UAE</p>
+                </li>
+                <li class="question-item" onclick="selectQuestion(this)">
+                    <p class="question-text">DIFC zone substance requirements and tax exemption conditions UAE</p>
+                </li>
+                <li class="question-item" onclick="selectQuestion(this)">
+                    <p class="question-text">VAT registration threshold and compliance timeline UAE</p>
+                </li>
+                <li class="question-item" onclick="selectQuestion(this)">
+                    <p class="question-text">Transfer pricing documentation requirements for UAE entities</p>
+                </li>
+                <li class="question-item" onclick="selectQuestion(this)">
+                    <p class="question-text">Mainland LLC vs FZE structure comparison for trading business UAE</p>
+                </li>
+                <li class="question-item" onclick="selectQuestion(this)">
+                    <p class="question-text">ADGM financial services license tax implications UAE</p>
+                </li>
+            </ul>
+        </div>
+
+        <div class="chat-area">
+            <div class="chat-content" id="chatContent">
+                <div class="welcome-message">
+                    <div class="welcome-title">Multi-Jurisdictional Tax Expertise</div>
+                    <div class="welcome-subtitle">
+                        Professional tax consultation across 6 jurisdictions with specialized knowledge in corporate structures, compliance requirements, and optimization strategies.
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        class="question-input" 
+                        id="questionInput" 
+                        placeholder="Ask a tax question..."
+                        onkeypress="handleKeyPress(event)"
+                    >
+                    <button class="send-button" onclick="sendQuestion()" id="sendButton">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 4L12 18M12 4L6 10M12 4L18 10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = 'https://alfrxd.app.n8n.cloud/webhook-test/uae-tax-agent';
+        
+        function selectQuestion(element) {
+            // Remove active class from all questions
+            document.querySelectorAll('.question-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to selected question
+            element.classList.add('active');
+            
+            // Get question text and send it
+            const questionText = element.querySelector('.question-text').textContent;
+            document.getElementById('questionInput').value = questionText;
+            sendQuestion();
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendQuestion();
+            }
+        }
+        
+        async function sendQuestion() {
+            const input = document.getElementById('questionInput');
+            const sendButton = document.getElementById('sendButton');
+            const chatContent = document.getElementById('chatContent');
+            
+            const question = input.value.trim();
+            if (!question) return;
+            
+            // Add user message
+            addMessage(question, 'user');
+            
+            // Clear input and disable button
+            input.value = '';
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<div class="spinner"></div>';
+            
+            // Add loading message
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message assistant fade-in';
+            loadingDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Analyzing tax regulations...</div>';
+            loadingDiv.id = 'loading-message';
+            chatContent.appendChild(loadingDiv);
+            chatContent.scrollTop = chatContent.scrollHeight;
+            
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: question })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+                
+                const data = await response.text();
+                
+                // Remove loading message
+                const loadingMessage = document.getElementById('loading-message');
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+                
+                // Add AI response
+                addMessage(data, 'assistant');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // Remove loading message
+                const loadingMessage = document.getElementById('loading-message');
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+                
+                addMessage('Unable to process your request at this time. Please check your connection and try again.', 'assistant');
+            }
+            
+            // Re-enable button
+            sendButton.disabled = false;
+            sendButton.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4L12 18M12 4L6 10M12 4L18 10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        }
+        
+        function addMessage(content, sender) {
+            const chatContent = document.getElementById('chatContent');
+            
+            // Remove welcome message if it exists
+            const welcomeMessage = chatContent.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender} fade-in`;
+            
+            // Format content
+            let formattedContent = content;
+            if (sender === 'assistant') {
+                formattedContent = content
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            }
+            
+            messageDiv.innerHTML = formattedContent;
+            chatContent.appendChild(messageDiv);
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+    </script>
+</body>
+</html>
